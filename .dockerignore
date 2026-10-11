@@ -1,0 +1,10 @@
+server/.venv
+server/__pycache__
+server/.pytest_cache
+server/storage
+server/.hf-cache
+server/gwen-upstream/.git
+server/gwen-upstream/data/infer-audio
+web-ui/node_modules
+web-ui/dist
+

@@ -1,0 +1,11 @@
+--extra-index-url https://download.pytorch.org/whl/cu124
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+redis==5.0.0
+numpy>=1.26.4,<3
+lameenc==1.8.4
+soundfile>=0.12.0
+torch==2.5.1+cu124
+torchaudio==2.5.1+cu124
+qwen-tts==0.1.1
+
