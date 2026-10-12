@@ -7,6 +7,7 @@ import threading
 from pathlib import Path
 
 import lameenc
+import librosa
 import numpy as np
 
 from .config import Settings
@@ -16,8 +17,11 @@ SERVER_DIR = Path(__file__).resolve().parent
 os.environ.setdefault("HF_HOME", str(SERVER_DIR / ".hf-cache"))
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
-# Generation values are from ggroup-ai-lab/gwen-tts/inference.py.
+# Checkpoint-specific values recommended by ggroup-ai-lab/gwen-tts for
+# natural Vietnamese voice cloning. Qwen uses ``subtalker_dosample`` (without
+# an underscore between "do" and "sample").
 GENERATION_CONFIG = {
+    "do_sample": True,
     "temperature": 0.3,
     "top_k": 20,
     "top_p": 0.9,
@@ -27,6 +31,7 @@ GENERATION_CONFIG = {
     "subtalker_temperature": 0.1,
     "subtalker_top_k": 20,
     "subtalker_top_p": 1.0,
+    "non_streaming_mode": True,
 }
 
 
@@ -93,7 +98,13 @@ class GwenRuntime:
             raise FileNotFoundError(f"Reference audio not found: {audio_path}")
         return audio_path, speaker["text"]
 
-    def synthesize(self, text: str, language: str, speaker_key: str) -> tuple[bytes, float]:
+    def synthesize(
+        self,
+        text: str,
+        language: str,
+        speaker_key: str,
+        speed: float = 1.0,
+    ) -> tuple[bytes, float]:
         model = self._load_model()
         reference_audio, reference_text = self._speaker(speaker_key)
         kwargs = {
@@ -103,6 +114,9 @@ class GwenRuntime:
             "ref_text": reference_text,
             **GENERATION_CONFIG,
         }
+        pad_token_id = codec_eos_token_id(model)
+        if pad_token_id is not None:
+            kwargs["pad_token_id"] = pad_token_id
         with self._inference_lock:
             try:
                 wavs, sample_rate = model.generate_voice_clone(**kwargs)
@@ -115,7 +129,30 @@ class GwenRuntime:
         waveform = np.asarray(wavs[0], dtype=np.float32).squeeze()
         if waveform.ndim != 1:
             waveform = waveform.reshape(-1)
-        return encode_mp3(waveform, int(sample_rate)), len(waveform) / float(sample_rate)
+        waveform = change_speed(waveform, speed)
+        return encode_mp3(waveform, int(sample_rate)), len(waveform) / float(
+            sample_rate
+        )
+
+
+def codec_eos_token_id(model) -> int | None:
+    """Return Qwen's audio-code EOS token for explicit generation padding."""
+    inner_model = getattr(model, "model", None)
+    config = getattr(inner_model, "config", None)
+    talker_config = getattr(config, "talker_config", None)
+    token_id = getattr(talker_config, "codec_eos_token_id", None)
+    return int(token_id) if token_id is not None else None
+
+
+def change_speed(waveform: np.ndarray, speed: float) -> np.ndarray:
+    if speed <= 0:
+        raise ValueError("Speed must be greater than zero")
+    if np.isclose(speed, 1.0):
+        return waveform
+    return np.asarray(
+        librosa.effects.time_stretch(waveform, rate=speed),
+        dtype=np.float32,
+    )
 
 
 def encode_mp3(waveform: np.ndarray, sample_rate: int) -> bytes:
@@ -126,4 +163,3 @@ def encode_mp3(waveform: np.ndarray, sample_rate: int) -> bytes:
     encoder.set_channels(1)
     encoder.set_quality(2)
     return encoder.encode(pcm) + encoder.flush()
-

@@ -5,8 +5,10 @@ export type SpeechJob = {
   status: JobStatus
   progress: number
   text: string
+  normalized_text: string | null
   language: string
   language_label: string
+  speed: number
   filename: string
   created_at: string
   updated_at: string
@@ -24,5 +26,6 @@ export type Language = {
 export type CreateSpeechInput = {
   text: string
   language: string
+  speed: number
 }
 

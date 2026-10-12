@@ -1,58 +1,31 @@
 services:
-  api:
-    build:
-      context: .
-      dockerfile: server/Dockerfile
-    env_file:
-      - server/.env
-    environment:
-      REDIS_URL: redis://redis:6379/0
-      STORAGE_DIR: /app/storage
-      HF_HOME: /app/.hf-cache
-    volumes:
-      - job-storage:/app/storage
-      - model-cache:/app/.hf-cache
-    ports:
-      - 8011:8011
-    restart: unless-stopped
-    stop_grace_period: 5m
-    depends_on:
-      redis:
-        condition: service_healthy
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-
-  worker:
-    build:
-      context: .
-      dockerfile: server/Dockerfile
-    command: [python, -m, server.worker]
-    env_file:
-      - server/.env
-    environment:
-      REDIS_URL: redis://redis:6379/0
-      STORAGE_DIR: /app/storage
-      HF_HOME: /app/.hf-cache
-    volumes:
-      - job-storage:/app/storage
-      - model-cache:/app/.hf-cache
-    restart: unless-stopped
-    stop_grace_period: 5m
-    depends_on:
-      redis:
-        condition: service_healthy
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: server/Dockerfile
+  #   env_file:
+  #     - server/.env
+  #   environment:
+  #     REDIS_URL: redis://redis:6379/0
+  #     STORAGE_DIR: /app/storage
+  #     HF_HOME: /app/.hf-cache
+  #   volumes:
+  #     - job-storage:/app/storage
+  #     - model-cache:/app/.hf-cache
+  #   ports:
+  #     - 8011:8011
+  #   restart: unless-stopped
+  #   stop_grace_period: 5m
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
 
   redis:
     image: redis:7-alpine

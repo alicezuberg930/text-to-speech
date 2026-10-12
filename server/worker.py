@@ -13,6 +13,7 @@ from redis.exceptions import RedisError
 from .app import GwenRuntime
 from .config import Settings, get_settings
 from .store import JobStore, make_redis_client
+from .utils import normalize
 
 logger = logging.getLogger("text_to_speech_service")
 
@@ -60,11 +61,19 @@ def process_job(job_id: str, store: JobStore, runtime: GwenRuntime) -> None:
         if record.status in {"succeeded", "failed"}:
             return
 
-        store.update(job_id, status="running", progress=10, error=None)
+        normalized_text = record.normalized_text or normalize(record.text, record.language)
+        store.update(
+            job_id,
+            status="running",
+            progress=10,
+            normalized_text=normalized_text,
+            error=None,
+        )
         audio_bytes, duration = runtime.synthesize(
-            text=record.text,
+            text=normalized_text,
             language=record.language_label,
             speaker_key=record.speaker,
+            speed=record.speed,
         )
 
         output_path = store.job_dir(job_id) / record.filename

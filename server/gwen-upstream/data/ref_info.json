@@ -1,6 +1,6 @@
 {
     "yen_nhi": {
-        "name": "Yến Nhi",  
+        "name": "Yến Nhi",
         "audio_path": "data/ref_audio/yen_nhi.wav",
         "text": "sao lại không liên quan. các anh lấy vợ rồi các anh cứ đội chị lên đầu làm nóc nhà ấy, suốt ngày hỏi ý kiến các chị thì làm sao mà ra vấn đề được cho em đúng không."
     },
@@ -33,7 +33,7 @@
         "name": "Trần Lâm",
         "audio_path": "data/ref_audio/tran_lam.wav",
         "text": "trí tuệ đổi mới và tinh thần đoàn kết, đất nước tự tin bứt phá, kiến tạo một tương lai thịnh vượng và vươn tầm quốc tế."
-    },    
+    },
     "nsnd_ha_phuong": {
         "name": "NSND Hà Phương",
         "audio_path": "data/ref_audio/nsnd_ha_phuong.wav",

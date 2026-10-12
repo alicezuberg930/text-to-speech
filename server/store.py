@@ -26,6 +26,8 @@ class JobRecord:
     language_label: str
     filename: str
     speaker: str
+    speed: float = 1.0
+    normalized_text: str | None = None
     created_at: str = field(default_factory=now_iso)
     updated_at: str = field(default_factory=now_iso)
     duration_seconds: float | None = None

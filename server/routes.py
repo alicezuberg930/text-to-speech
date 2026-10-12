@@ -8,7 +8,14 @@ from pydantic import BaseModel, Field, field_validator
 
 from .config import get_settings
 from .store import JobRecord, JobStore, make_redis_client
-from .utils import LANGUAGES, is_valid_job_id, job_id_generator, json_sse, output_filename
+from .utils import (
+    LANGUAGES,
+    is_valid_job_id,
+    job_id_generator,
+    json_sse,
+    normalize,
+    output_filename,
+)
 
 router = APIRouter()
 settings = get_settings()
@@ -25,6 +32,7 @@ store = JobStore(
 class CreateSpeechRequest(BaseModel):
     text: str = Field(min_length=1, max_length=settings.max_text_length)
     language: str = "vn"
+    speed: float = Field(default=1.0, ge=0.75, le=1.5)
 
     @field_validator("text")
     @classmethod
@@ -104,6 +112,8 @@ def create_job(payload: CreateSpeechRequest, request: Request) -> dict:
         language_label=LANGUAGES[payload.language],
         filename=output_filename(payload.language, settings.timezone),
         speaker=settings.default_speaker,
+        speed=payload.speed,
+        normalized_text=normalize(payload.text, payload.language),
     )
     try:
         store.create(record)
